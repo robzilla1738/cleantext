@@ -1,0 +1,16 @@
+{
+  "name": "cleantext",
+  "version": "0.1.0",
+  "description": "Unicode integrity auditor and deletion-only transport sanitizer for plain text.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {"node": ">=20"},
+  "bin": {"cleantext": "plugins/cleantext/bin/cleantext.mjs"},
+  "exports": {".": "./plugins/cleantext/src/core.mjs", "./report": "./plugins/cleantext/src/report.mjs"},
+  "files": ["plugins/cleantext", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
+  "scripts": {"test": "node --test", "check": "node scripts/check.mjs", "generate:unicode": "node scripts/generate-unicode-data.mjs", "release:check": "npm run check && npm test && npm pack --dry-run"},
+  "keywords": ["unicode", "text", "security", "bidi", "zero-width", "invisible-characters", "text-sanitizer"],
+  "homepage": "https://github.com/robzilla1738/cleantext#readme",
+  "repository": {"type": "git", "url": "git+https://github.com/robzilla1738/cleantext.git"},
+  "bugs": {"url": "https://github.com/robzilla1738/cleantext/issues"}
+}
