@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { cleanText, scanText, verifyDeletionOnly, UNICODE_VERSION } from '../plugins/cleantext/src/core.mjs';
+test('uses pinned Unicode 17 data',()=>assert.equal(UNICODE_VERSION,'17.0.0'));
+test('ordinary multilingual text is unchanged',()=>{const input='English — العربية — עברית — हिन्दी — ไทย — 日本語 — 한글 — emoji: café\n',r=cleanText(input);assert.equal(r.text,input);assert.equal(r.changed,false);});
+test('transport removes leading BOM',()=>{const input='\uFEFFAlpha',r=cleanText(input);assert.equal(r.text,'Alpha');assert.ok(verifyDeletionOnly(input,r.text,r.findings));});
+test('transport removes NUL only',()=>{const input='A\u0000B',r=cleanText(input);assert.equal(r.text,'AB');assert.ok(verifyDeletionOnly(input,r.text,r.findings));});
+test('preserve removes nothing',()=>{const input='\uFEFFA\u0000B',r=cleanText(input,{policy:'preserve'});assert.equal(r.text,input);});
+test('zero width space is detected and preserved',()=>{const input='A\u200BB',r=scanText(input);assert.equal(r.text,input);assert.equal(r.findings[0].code,'U+200B');assert.equal(r.findings[0].action,'preserve');});
+test('ZWJ and variation selector preserved',()=>{const r=scanText('👩\u200D💻 ♥\uFE0F');assert.ok(r.findings.some(f=>f.code==='U+200D'));assert.ok(r.findings.some(f=>f.code==='U+FE0F'));});
+test('ZWNJ preserved',()=>{const input='می\u200Cروم',r=scanText(input);assert.equal(r.text,input);assert.equal(r.findings[0].code,'U+200C');});
+test('bidi controls preserved',()=>{const r=scanText('abc\u202Edef\u202Cghi');assert.equal(r.findings.length,2);assert.ok(r.findings.every(f=>f.kind==='bidi-control'));});
+test('RGI emoji tags recognized',()=>{const r=scanText('🏴\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}');assert.equal(r.findings.length,6);assert.ok(r.findings.every(f=>f.kind==='emoji-tag'));});
+test('orphan tag data preserved',()=>{const input='A\u{E0068}\u{E0069}\u{E007F}B',r=scanText(input);assert.equal(r.text,input);assert.ok(r.findings.every(f=>f.action==='preserve'));});
+test('line endings not normalized',()=>{const input='# H\r\n\r\n**bold**  \r\n`code`\r\n';assert.equal(cleanText(input).text,input);});
+test('UTF-8 offsets exact',()=>{const r=scanText('éA\u200BB');assert.equal(r.findings[0].offsetUtf8,3);});
