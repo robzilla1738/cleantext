@@ -1,0 +1,5 @@
+{
+  "name": "cleantext-marketplace",
+  "owner": {"name": "CleanText contributors"},
+  "plugins": [{"name": "cleantext", "source": "./plugins/cleantext", "description": "Audits hidden/control Unicode in Claude Code output without silently rewriting or stripping provenance data."}]
+}
