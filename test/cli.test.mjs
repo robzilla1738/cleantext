@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
+const CLI=resolve('plugins/cleantext/bin/cleantext.mjs');
+const run=(args,{input=''}={})=>spawnSync(process.execPath,[CLI,...args],{input,encoding:'utf8',cwd:resolve('.')});
+test('clean stdin',()=>{const r=run(['clean'],{input:'\uFEFFA\u0000B'});assert.equal(r.status,0);assert.equal(r.stdout,'AB');});
+test('scan JSON',()=>{const r=run(['scan','--json'],{input:'A\u200BB'}),report=JSON.parse(r.stdout);assert.equal(report.findings[0].code,'U+200B');});
+test('--check semantics',()=>{assert.equal(run(['scan','--check'],{input:'ABC'}).status,0);assert.equal(run(['scan','--check'],{input:'\uFEFFABC'}).status,1);});
+test('hook preserves and warns',()=>{const delta='A\u200BB\n',r=run(['hook-audit'],{input:JSON.stringify({delta})}),o=JSON.parse(r.stdout);assert.ok(o.hookSpecificOutput.displayContent.startsWith(delta));assert.match(o.hookSpecificOutput.displayContent,/U\+200B/);});
+test('in-place clean',()=>{const dir=mkdtempSync(join(tmpdir(),'cleantext-'));try{const f=join(dir,'x.txt');writeFileSync(f,'\uFEFFA\u0000B');const r=run(['clean',f,'--in-place']);assert.equal(r.status,0);assert.equal(readFileSync(f,'utf8'),'AB');}finally{rmSync(dir,{recursive:true,force:true});}});
+test('invalid UTF-8 rejected',()=>{const r=spawnSync(process.execPath,[CLI,'scan'],{input:Buffer.from([0xc3,0x28]),cwd:resolve('.')});assert.equal(r.status,2);});
