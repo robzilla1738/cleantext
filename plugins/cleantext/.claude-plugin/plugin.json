@@ -1,0 +1,6 @@
+{
+  "name": "cleantext",
+  "description": "Unicode integrity auditing for Claude Code output and text files.",
+  "version": "0.1.0",
+  "author": {"name": "CleanText contributors"}
+}
